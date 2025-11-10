@@ -1,12 +1,12 @@
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from bson import ObjectId
 
 from database import db, create_document, get_documents
-from schemas import Asset, Investment, Crypto, Will, TaxFiling
+from schemas import Asset, Investment, Crypto, Will, TaxFiling, Subscriber
 
 app = FastAPI(title="Finance Dashboard API")
 
@@ -127,6 +127,27 @@ def list_tax() -> List[TaxFiling]:
 def add_tax(filing: TaxFiling):
     inserted_id = create_document("taxfiling", filing)
     return {"id": inserted_id, "message": "Tax filing recorded"}
+
+
+# Newsletter/Waitlist subscribers
+@app.get("/subscribers")
+def list_subscribers():
+    docs = get_documents("subscriber")
+    return [{k: v for k, v in d.items() if k != "_id"} for d in docs]
+
+
+class SubscriberIn(BaseModel):
+    email: EmailStr
+    name: Optional[str] = None
+    source: Optional[str] = "website"
+
+
+@app.post("/subscribers")
+def add_subscriber(sub: SubscriberIn):
+    # Use schema for collection naming and validation storage shape
+    sb = Subscriber(email=sub.email, name=sub.name, source=sub.source)
+    inserted_id = create_document("subscriber", sb)
+    return {"id": inserted_id, "message": "Thanks for subscribing!"}
 
 
 if __name__ == "__main__":

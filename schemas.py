@@ -5,7 +5,7 @@ Each Pydantic model represents a MongoDB collection. The collection name is the 
 of the class name (e.g., Asset -> "asset").
 """
 from typing import Optional, List, Literal
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, EmailStr
 from datetime import date
 
 
@@ -62,3 +62,13 @@ class TaxFiling(BaseModel):
     status: Literal["planned", "in_progress", "filed", "refunded", "due"] = Field(..., description="Filing status")
     filed_on: Optional[date] = Field(None, description="Date filed")
     file_url: Optional[HttpUrl] = Field(None, description="Link to return or receipts")
+
+
+class Subscriber(BaseModel):
+    """
+    Email capture leads for waitlist/newsletter.
+    Collection: "subscriber"
+    """
+    email: EmailStr = Field(..., description="Subscriber email")
+    name: Optional[str] = Field(None, description="Full name (optional)")
+    source: Optional[str] = Field("website", description="Capture source e.g., hero, footer, pricing")
