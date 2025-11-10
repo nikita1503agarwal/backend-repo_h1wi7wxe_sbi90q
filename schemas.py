@@ -1,48 +1,64 @@
 """
-Database Schemas
+Finance Dashboard Schemas
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection. The collection name is the lowercase
+of the class name (e.g., Asset -> "asset").
 """
+from typing import Optional, List, Literal
+from pydantic import BaseModel, Field, HttpUrl
+from datetime import date
 
-from pydantic import BaseModel, Field
-from typing import Optional
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
+class Asset(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    General assets you own. Can be physical or digital.
+    Collection: "asset"
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str = Field(..., description="Asset name")
+    category: Literal["physical", "digital"] = Field(..., description="Type of asset")
+    value: float = Field(..., ge=0, description="Estimated current value in USD")
+    notes: Optional[str] = Field(None, description="Additional details")
 
-class Product(BaseModel):
+
+class Investment(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Traditional investments like stocks, bonds, funds, real estate.
+    Collection: "investment"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    name: str = Field(..., description="Investment name or ticker")
+    kind: Literal["stock", "bond", "fund", "real_estate", "other"] = Field(..., description="Investment category")
+    institution: Optional[str] = Field(None, description="Brokerage or institution")
+    value: float = Field(..., ge=0, description="Current market value in USD")
 
-# Add your own schemas here:
-# --------------------------------------------------
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Crypto(BaseModel):
+    """
+    Cryptocurrency holdings.
+    Collection: "crypto"
+    """
+    symbol: str = Field(..., description="Crypto symbol, e.g., BTC")
+    amount: float = Field(..., ge=0, description="Units held")
+    exchange: Optional[str] = Field(None, description="Exchange or wallet provider")
+    value_usd: Optional[float] = Field(None, ge=0, description="Current value in USD (optional)")
+
+
+class Will(BaseModel):
+    """
+    Will and estate planning documents.
+    Collection: "will"
+    """
+    title: str = Field(..., description="Document title")
+    executor_name: Optional[str] = Field(None, description="Executor full name")
+    beneficiaries: List[str] = Field(default_factory=list, description="Beneficiaries list")
+    file_url: Optional[HttpUrl] = Field(None, description="Link to stored document")
+
+
+class TaxFiling(BaseModel):
+    """
+    Income tax filings and records.
+    Collection: "taxfiling"
+    """
+    year: int = Field(..., ge=1990, le=2100, description="Tax year")
+    status: Literal["planned", "in_progress", "filed", "refunded", "due"] = Field(..., description="Filing status")
+    filed_on: Optional[date] = Field(None, description="Date filed")
+    file_url: Optional[HttpUrl] = Field(None, description="Link to return or receipts")
